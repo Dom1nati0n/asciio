@@ -43,11 +43,10 @@ class Ascio:
             self._camera_eid = eid
         return eid
 
-    def add_point_light(self, wx: float, wy: float, radius: float, intensity: float,
-                        color=(255,220,140), lifetime=-1.0) -> PointLight:
-        light = PointLight(wx, wy, radius, intensity, color, lifetime)
-        self._lights.add(light)
-        return light
+    def add_area_light(self, wx: float, wy: float, w: float, h: float, intensity: float, color=(255,220,140)):
+        # Stub: treat as point light at center
+        cx, cy = wx + w/2, wy + h/2
+        return self.add_point_light(cx, cy, max(w, h)/2, intensity, color)
 
     def flash_tile(self, wx: int, wy: int, color: tuple, duration: float, intensity=1.0):
         self._renderer.add_tile_flash(wx, wy, color, duration, intensity)
@@ -55,6 +54,9 @@ class Ascio:
     def set_velocity(self, eid: int, vx: float, vy: float):
         self._ecs.vel_x[eid] = vx
         self._ecs.vel_y[eid] = vy
+
+    def screen_flash(self, color: tuple, duration: float, intensity=1.0):
+        self._lights.screen_flash(color, duration, intensity)
 
     def key_held(self, key: int) -> bool:
         return key in self._keys_held

@@ -11,7 +11,6 @@ class Renderer:
         self.light_sys = light_sys
 
         self.layer = pygame.Surface((cfg.internal_w, cfg.internal_h))
-        self.palette = np.array(cfg.palette, dtype=np.uint8)
 
         ph, pw = cfg.rows * cfg.cell_h, cfg.cols * cfg.cell_w
         self.ph, self.pw = ph, pw
@@ -54,12 +53,13 @@ class Renderer:
         cam_y = int(py) - cfg.rows // 2
         vp_px, vp_py = px - cam_x, py - cam_y
 
-        mat = chunks.sample_viewport(cam_x, cam_y)
+        mat, fg, bg = chunks.sample_viewport(cam_x, cam_y)
         vis = sonar.mask(vp_px, vp_py)
-        indices = np.minimum(mat, vis).astype(np.uint8)
+        indices = mat  # glyph ords
 
-        # Expand palette and glyphs
-        cell_colors = self.palette[indices]
+        # Use fg/bg colors directly, modulated by visibility
+        vis_factor = vis.astype(np.float32) / 4.0
+        cell_colors = (fg.astype(np.float32) * vis_factor[:, :, None]).astype(np.uint8)
         self.colors_px[:] = np.broadcast_to(
             cell_colors[:,:,None,None,:], (cfg.rows, cfg.cols, cfg.cell_h, cfg.cell_w, 3)
         ).transpose(0,2,1,3,4).reshape(self.ph, self.pw, 3)
